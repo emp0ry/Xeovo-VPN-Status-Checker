@@ -72,21 +72,27 @@ The script will:
 ```
 Xeovo VPN Server Latency and Load List:
 
-╒═════╤═══════════════╤═══════════════╤══════════════════════╤══════════════╤══════════╕
-│   # │ Country       │ City          │ Host                 │ Latency      │ Load     │
-╞═════╪═══════════════╪═══════════════╪══════════════════════╪══════════════╪══════════╡
-│   1 │ Australia     │ Sydney        │ au.gw.xeovo.com      │ 120.5 ms     │ N/A      │
-│   2 │ Canada        │ Montreal      │ ca.gw.xeovo.com      │ 80.2 ms      │ 1%       │
-│   3 │ Switzerland   │ Zurich        │ ch.gw.xeovo.com      │ 45.3 ms      │ 2%       │
-│   4 │ Finland       │ Helsinki      │ fi.gw.xeovo.com      │ timeout      │ 9%       │
-│ ... │ ...           │ ...           │ ...                  │ ...          │ ...      │
-│  14 │ Singapore     │ Singapore     │ sg.gw.xeovo.com      │ 45.3 ms      │ 0%       │
-│  15 │ Ukraine       │ Kyiv          │ ua.gw.xeovo.com      │ 90.7 ms      │ 0%       │
-│  16 │ United Kingdom│ London        │ uk.gw.xeovo.com      │ 40.1 ms      │ 10%      │
-│  17 │ United States │ Las Vegas     │ us-lv.gw.xeovo.com   │ 85.5 ms      │ 3%       │
-│  18 │ United States │ Miami         │ us-mia.gw.xeovo.com  │ 110.2 ms     │ N/A      │
-│  19 │ United States │ New York      │ us-nyc.gw.xeovo.com  │ 90.7 ms      │ 6%       │
-╘═════╧═══════════════╧═══════════════╧══════════════════════╧══════════════╧══════════╛
+╒═════╤════════════════╤════════════╤═════════════════════╤═══════════╤════════╕
+│   # │ Country        │ City       │ Host                │ Latency   │ Load   │
+╞═════╪════════════════╪════════════╪═════════════════════╪═══════════╪════════╡
+│   1 │ Australia      │ Sydney     │ au.gw.xeovo.com     │ 331.0 ms  │ 16%    │
+├─────┼────────────────┼────────────┼─────────────────────┼───────────┼────────┤
+│   2 │ Canada         │ Montreal   │ ca.gw.xeovo.com     │ 142.0 ms  │ 4%     │
+├─────┼────────────────┼────────────┼─────────────────────┼───────────┼────────┤
+│   3 │ Switzerland    │ Zurich     │ ch.gw.xeovo.com     │ 70.0 ms   │ 17%    │
+├─────┼────────────────┼────────────┼─────────────────────┼───────────┼────────┤
+│   4 │ Finland        │ Helsinki   │ fi.gw.xeovo.com     │ 84.0 ms   │ 51%    │
+├─────┼────────────────┼────────────┼─────────────────────┼───────────┼────────┤
+│ ... │ ...            │ ...        │ ...                 │ ...       │ ...    │
+├─────┼────────────────┼────────────┼─────────────────────┼───────────┼────────┤
+│  16 │ United Kingdom │ London     │ uk.gw.xeovo.com     │ 65.0 ms   │ 32%    │
+├─────┼────────────────┼────────────┼─────────────────────┼───────────┼────────┤
+│  17 │ United States  │ Las Vegas  │ us-lv.gw.xeovo.com  │ 211.0 ms  │ 14%    │
+├─────┼────────────────┼────────────┼─────────────────────┼───────────┼────────┤
+│  18 │ United States  │ Miami      │ us-mia.gw.xeovo.com │ 173.0 ms  │ 4%     │
+├─────┼────────────────┼────────────┼─────────────────────┼───────────┼────────┤
+│  19 │ United States  │ New York   │ us-nyc.gw.xeovo.com │ 140.0 ms  │ 20%    │
+╘═════╧════════════════╧════════════╧═════════════════════╧═══════════╧════════╛
 ```
 *Note*: Latency and load values are colored (green/yellow/red) in the terminal but shown here as plain text. Some servers may show "N/A" if not listed on the status page.
 
