@@ -133,7 +133,7 @@ def ping(host):
         )
         output = result.stdout
         if system == "windows":
-            match = re.search(r"Average = (\d+)ms", output)
+            match = re.search(r"(\d+)", output.split(" = ")[-1])
         else:
             match = re.search(r"time=(\d+\.?\d*) ms", output)
         if match:
