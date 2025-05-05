@@ -86,7 +86,7 @@ Xeovo VPN Server Latency and Load List:
 │  17 │ United States │ Las Vegas     │ us-lv.gw.xeovo.com   │ 85.5 ms      │ 3%       │
 │  18 │ United States │ Miami         │ us-mia.gw.xeovo.com  │ 110.2 ms     │ N/A      │
 │  19 │ United States │ New York      │ us-nyc.gw.xeovo.com  │ 90.7 ms      │ 6%       │
-╘═════╧═══════════════╧═══════════════╧══════════════════════╧══════════════╧══════════╘
+╘═════╧═══════════════╧═══════════════╧══════════════════════╧══════════════╧══════════╛
 ```
 *Note*: Latency and load values are colored (green/yellow/red) in the terminal but shown here as plain text. Some servers may show "N/A" if not listed on the status page.
 
