@@ -11,9 +11,11 @@ init()
 
 # Xeovo VPN server info
 xeovo_vpn_info = {
+    "al":      ("au.gw.xeovo.com", "Albania", "Tirana"),
     "au":      ("au.gw.xeovo.com", "Australia", "Sydney"),
     "ca":      ("ca.gw.xeovo.com", "Canada", "Montreal"),
     "ch":      ("ch.gw.xeovo.com", "Switzerland", "Zurich"),
+    "de":      ("ch.gw.xeovo.com", "Germany", "Falkenstein"),
     "fi":      ("fi.gw.xeovo.com", "Finland", "Helsinki"),
     "fr":      ("fr.gw.xeovo.com", "France", "Paris"),
     "jp":      ("jp.gw.xeovo.com", "Japan", "Tokyo"),
