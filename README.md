@@ -25,7 +25,7 @@ A Python script that pings Xeovo VPN servers, fetches their real-time server loa
 ## 🛠️ Installation
 1. **Clone the Repository**:
    ```bash
-   git clone https://github.com/<your-username>/Xeovo-VPN-Status-Checker.git
+   git clone https://github.com/emp0ry/Xeovo-VPN-Status-Checker.git
    cd Xeovo-VPN-Status-Checker
    ```
 
