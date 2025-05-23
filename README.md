@@ -2,6 +2,9 @@
 
 A Python script that pings Xeovo VPN servers, fetches their real-time server load from [status.xeovo.com](https://status.xeovo.com/), and displays the results in a colored, tabulated format. The script is **cross-platform**, running on **Windows**, **Linux**, and **macOS**.
 
+## 🛠️ PS
+**⚠️ Load not working now.**
+
 ## 🚀 Features
 - **Ping Servers**: Measures latency to Xeovo VPN servers (e.g., `au.gw.xeovo.com`).
 - **Real-Time Load**: Scrapes server load data from https://status.xeovo.com/.
