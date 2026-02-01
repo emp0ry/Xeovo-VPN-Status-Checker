@@ -39,7 +39,6 @@ This script:
 - Uses OS-specific ping flags for Windows / Linux / macOS
 
 > ✅ Tip: For *real geographic latency*, run this **outside** the VPN.  
-> If you run it while connected to Xeovo, you may see ~0–1 ms due to internal backbone routing.
 
 ---
 
