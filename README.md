@@ -1,138 +1,254 @@
-# 🌐 Xeovo VPN Status Checker
+<p align="center">
+  <img src="https://xeovo.com/static/images/logo.svg" width="510" alt="Xeovo Logo">
+</p>
 
-A Python script that pings Xeovo VPN servers, fetches their real-time server load from [status.xeovo.com](https://status.xeovo.com/), and displays the results in a colored, tabulated format. The script is **cross-platform**, running on **Windows**, **Linux**, and **macOS**.
+<h1 align="center">Xeovo VPN Status Checker</h1>
 
-## 🛠️ PS
-**⚠️ Load not working now.**
+<p align="center">
+  A cross-platform CLI tool that pings Xeovo VPN gateways and shows a clean, colorized table with
+  <strong>real latency</strong> and <strong>server load</strong>.
+  <br>
+  Works on <strong>Windows</strong>, <strong>Linux</strong>, and <strong>macOS</strong>.
+</p>
 
-## 🚀 Features
-- **Ping Servers**: Measures latency to Xeovo VPN servers (e.g., `au.gw.xeovo.com`).
-- **Real-Time Load**: Scrapes server load data from https://status.xeovo.com/.
+<p align="center">
+  <a href="https://github.com/emp0ry/Xeovo-VPN-Status-Checker/releases/latest">
+    <img src="https://img.shields.io/github/v/release/emp0ry/Xeovo-VPN-Status-Checker?logo=github&color=5865F2" alt="Latest Release">
+  </a>
+  <a href="https://img.shields.io/github/downloads/emp0ry/Xeovo-VPN-Status-Checker/total?color=ff6d00&label=Total%20Downloads">
+    <img src="https://img.shields.io/github/downloads/emp0ry/Xeovo-VPN-Status-Checker/total?color=ff6d00&label=Total%20Downloads" alt="Total Downloads">
+  </a>
+  <a href="https://www.python.org/">
+    <img src="https://img.shields.io/badge/Python-3.6%2B-3776AB?logo=python&logoColor=white" alt="Python Version">
+  </a>
+  <a href="LICENSE">
+    <img src="https://img.shields.io/github/license/emp0ry/Xeovo-VPN-Status-Checker?color=00C853" alt="License: MIT">
+  </a>
+</p>
+
+
+---
+
+## 🚀 What This Does
+
+This script:
+
+- Pings Xeovo VPN servers (e.g., `au.gw.xeovo.com`) to measure **real latency**
+- Scrapes **server load** from <a href="https://status.xeovo.com/">status.xeovo.com</a>
+- Prints a **colored, tabulated** status list in your terminal
+- Uses OS-specific ping flags for Windows / Linux / macOS
+
+> ✅ Tip: For *real geographic latency*, run this **outside** the VPN.  
+> If you run it while connected to Xeovo, you may see ~0–1 ms due to internal backbone routing.
+
+---
+
+## ✨ Features
+
+- **Ping Servers**: Reliable latency measurement with robust parsing (Windows + Unix).
+- **Real-Time Load**: Pulls load % from the Xeovo status page.
 - **Colored Output**:
-  - Latency: Green (<50 ms), Yellow (50–100 ms), Red (>100 ms or timeout).
-  - Load: Green (<30%), Yellow (30–60%), Red (>60% or DOWN).
-- **Special Cases**: Handles unique location names (e.g., "Singapore", "UK, London" instead of "United Kingdom, London").
-- **Tabulated Display**: Uses `tabulate` with `fancy_grid` for clean, bordered tables.
-- **No Sorting**: Lists servers in a predefined order.
-- **Cross-Platform**: Adapts to Windows, Linux, and macOS for ping commands and terminal output.
+  - **Latency**: Green (fast), Yellow (medium), Red (slow/timeout)
+  - **Load**: Green (low), Yellow (medium), Red (high / DOWN / N/A)
+- **Special Cases**: Supports Xeovo naming like `USA, ...`, `UK, ...`, and `Singapore`.
+- **Clean Table Output**: Uses `tabulate` to render a bordered table.
+- **No Sorting**: Keeps a predefined server order.
+- **Cross-Platform**: Works on Windows / Linux / macOS.
+
+---
 
 ## 📦 Requirements
-- Python 3.6 or higher
-- Required Python packages (listed in `requirements.txt`):
+
+- **Python 3.6+**
+- Packages from `requirements.txt`:
   - `requests`
   - `beautifulsoup4`
   - `colorama`
   - `tabulate`
-- The `ping` command (pre-installed on Windows and macOS; may need installation on Linux)
+- System `ping` command:
+  - Pre-installed on Windows/macOS
+  - On Linux it may require installing `iputils-ping`
+
+---
 
 ## 🛠️ Installation
-1. **Clone the Repository**:
-   ```bash
-   git clone https://github.com/emp0ry/Xeovo-VPN-Status-Checker.git
-   cd Xeovo-VPN-Status-Checker
-   ```
 
-2. **Install Python** (if not already installed):
-   - **Windows**: Download from [python.org](https://www.python.org/) or use `choco install python`.
-   - **Linux**: Install via package manager:
-     - Ubuntu/Debian: `sudo apt-get install python3`
-     - CentOS/RHEL: `sudo yum install python3`
-   - **macOS**: Use Homebrew: `brew install python3` (or pre-installed on recent versions).
-   - Verify: `python3 --version` or `python --version`.
+### 1) Clone the Repository
+```bash
+git clone https://github.com/emp0ry/Xeovo-VPN-Status-Checker.git
+cd Xeovo-VPN-Status-Checker
+````
 
-3. **Install the Ping Command** (Linux only, if missing):
-   - Ubuntu/Debian: `sudo apt-get install iputils-ping`
-   - CentOS/RHEL: `sudo yum install iputils`
+### 2) Install Python (if not installed)
 
-4. **Install Dependencies**:
-   ```bash
-   pip install -r requirements.txt
-   ```
-   If permission issues occur:
-   ```bash
-   pip install -r requirements.txt --user
-   ```
+#### Windows
 
-5. **Ensure Internet Access**:
-   - The script requires access to https://status.xeovo.com/ and VPN servers for pinging.
+Download from: [https://www.python.org](https://www.python.org)
+(make sure to check **“Add Python to PATH”**)
+
+#### Linux
+
+Ubuntu / Debian:
+
+```bash
+sudo apt-get update
+sudo apt-get install -y python3
+```
+
+CentOS / RHEL:
+
+```bash
+sudo yum install -y python3
+```
+
+#### macOS
+
+```bash
+brew install python3
+```
+
+Verify:
+
+```bash
+python --version
+# or
+python3 --version
+```
+
+### 3) Install the Ping Command (Linux only, if missing)
+
+Ubuntu / Debian:
+
+```bash
+sudo apt-get install -y iputils-ping
+```
+
+CentOS / RHEL:
+
+```bash
+sudo yum install -y iputils
+```
+
+### 4) Install Dependencies
+
+```bash
+pip install -r requirements.txt
+```
+
+If you get permission errors:
+
+```bash
+pip install -r requirements.txt --user
+```
+
+---
 
 ## ▶️ Usage
-Run the script with:
+
+Run:
+
 ```bash
 python main.py
+# or
+python3 main.py
 ```
-On Linux, if ping permissions are restricted:
+
+On Linux, if ICMP ping requires root:
+
 ```bash
-sudo python main.py
+sudo python3 main.py
 ```
 
 The script will:
-- Fetch server load data from https://status.xeovo.com/.
-- Ping each Xeovo VPN server.
-- Display a table with server details, latency, and load.
 
-### 📋 Example Output
+* Fetch load data from `status.xeovo.com`
+* Ping each Xeovo VPN server
+* Print a table with **Country / City / Host / Latency / Load**
+
+---
+
+## 📋 Example Output
+
 ```
 Xeovo VPN Server Latency and Load List:
 
-╒═════╤════════════════╤════════════╤═════════════════════╤═══════════╤════════╕
-│   # │ Country        │ City       │ Host                │ Latency   │ Load   │
-╞═════╪════════════════╪════════════╪═════════════════════╪═══════════╪════════╡
-│   1 │ Australia      │ Sydney     │ au.gw.xeovo.com     │ 331.0 ms  │ 16%    │
-├─────┼────────────────┼────────────┼─────────────────────┼───────────┼────────┤
-│   2 │ Canada         │ Montreal   │ ca.gw.xeovo.com     │ 142.0 ms  │ 4%     │
-├─────┼────────────────┼────────────┼─────────────────────┼───────────┼────────┤
-│   3 │ Switzerland    │ Zurich     │ ch.gw.xeovo.com     │ 70.0 ms   │ 17%    │
-├─────┼────────────────┼────────────┼─────────────────────┼───────────┼────────┤
-│   4 │ Finland        │ Helsinki   │ fi.gw.xeovo.com     │ 84.0 ms   │ 51%    │
-├─────┼────────────────┼────────────┼─────────────────────┼───────────┼────────┤
-│ ... │ ...            │ ...        │ ...                 │ ...       │ ...    │
-├─────┼────────────────┼────────────┼─────────────────────┼───────────┼────────┤
-│  16 │ United Kingdom │ London     │ uk.gw.xeovo.com     │ 65.0 ms   │ 32%    │
-├─────┼────────────────┼────────────┼─────────────────────┼───────────┼────────┤
-│  17 │ United States  │ Las Vegas  │ us-lv.gw.xeovo.com  │ 211.0 ms  │ 14%    │
-├─────┼────────────────┼────────────┼─────────────────────┼───────────┼────────┤
-│  18 │ United States  │ Miami      │ us-mia.gw.xeovo.com │ 173.0 ms  │ 4%     │
-├─────┼────────────────┼────────────┼─────────────────────┼───────────┼────────┤
-│  19 │ United States  │ New York   │ us-nyc.gw.xeovo.com │ 140.0 ms  │ 20%    │
-╘═════╧════════════════╧════════════╧═════════════════════╧═══════════╧════════╛
++----------------+------------+---------------------+-----------+--------+
+| Country        | City       | Host                | Latency   | Load   |
++================+============+=====================+===========+========+
+| Albania        | Tirana     | al.gw.xeovo.com     | 77.0 ms   | 45%    |
++----------------+------------+---------------------+-----------+--------+
+| Australia      | Sydney     | au.gw.xeovo.com     | 331.0 ms  | 0%     |
++----------------+------------+---------------------+-----------+--------+
+| Brazil         | São Paulo  | br.gw.xeovo.com     | 287.0 ms  | 0%     |
++----------------+------------+---------------------+-----------+--------+
+| ---            | ---        | ---                 | ---       | ---    |
++----------------+------------+---------------------+-----------+--------+
+| United States  | Las Vegas  | us-lv.gw.xeovo.com  | 198.0 ms  | 1%     |
++----------------+------------+---------------------+-----------+--------+
+| United States  | Miami      | us-mia.gw.xeovo.com | 168.0 ms  | 0%     |
++----------------+------------+---------------------+-----------+--------+
+| United States  | New York   | us-nyc.gw.xeovo.com | 138.0 ms  | 0%     |
++----------------+------------+---------------------+-----------+--------+
 ```
-*Note*: Latency and load values are colored (green/yellow/red) in the terminal but shown here as plain text. Some servers may show "N/A" if not listed on the status page.
 
-## 💡 Platform-Specific Notes
-- **Windows**:
-  - Works out of the box with Python 3.6+ and `ping` (pre-installed).
-  - Ensure `colorama` is installed for colored output in Command Prompt or PowerShell.
-- **Linux**:
-  - Install `iputils-ping` if `ping` is missing.
-  - May require `sudo` for `ping` due to ICMP restrictions. Alternatively, set ping permissions:
-    ```bash
-    sudo chmod u+s /bin/ping
-    ```
-- **macOS**:
-  - Python 3 and `ping` are typically pre-installed.
-  - Use `python3` to run the script if `python` points to Python 2.
+> Note: In the terminal, values are colored (green/yellow/red).
+> Some servers may show `N/A` if the status page format changes or a server is missing.
+
+---
+
+## 💡 Platform Notes
+
+### Windows
+
+* Works out of the box
+* Colored output supported (via `colorama`)
+
+### Linux
+
+* You may need `iputils-ping`
+* Some systems require `sudo` for ping
+  Alternative (not recommended unless you understand it):
+
+  ```bash
+  sudo chmod u+s /bin/ping
+  ```
+
+### macOS
+
+* Use `python3` if `python` points to Python 2
+
+---
 
 ## 🧰 Troubleshooting
-- **Loads Show "N/A"**:
-  - Verify internet access and that https://status.xeovo.com/ is reachable.
-  - Check if the page structure has changed by inspecting `<table class="vpngw">` in the browser.
-  - Share the output table for further debugging.
-- **Ping Failures**:
-  - Ensure `ping` is installed and accessible.
-  - Check firewall settings to allow ICMP packets.
-  - On Linux, use `sudo` or adjust `ping` permissions if errors occur.
-- **Dependency Issues**:
-  - Ensure `requirements.txt` is in the project directory.
-  - Run `pip install -r requirements.txt --user` for permission errors.
-  - Verify Python 3.6+ (`python3 --version` or `python --version`).
 
-## ☕ Donation
-[!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/emp0ry)
+### Load shows `N/A`
 
-## 📄 License
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+* Check if <a href="https://status.xeovo.com/">status.xeovo.com</a> is reachable
+* Xeovo may change page structure → scraper may need updates
+
+### Ping fails / shows timeout
+
+* Check your firewall / ICMP restrictions
+* On Linux try `sudo`
+* Make sure DNS is working and hostnames resolve
+
+---
+
+## 💖 Support the Project
+
+[![Buy Me a Coffee](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/emp0ry)
+
+---
+
+## 📜 License
+
+Released under the [MIT License](LICENSE).
+
+---
 
 ## 🙌 Acknowledgments
-- Built with Python, `requests`, `beautifulsoup4`, `colorama`, and `tabulate`.
-- Data sourced from [Xeovo VPN Status Page](https://status.xeovo.com/).
+
+* Built with Python, `requests`, `beautifulsoup4`, `colorama`, and `tabulate`
+* Status data sourced from <a href="https://status.xeovo.com/">Xeovo Status Page</a>
+
+```
