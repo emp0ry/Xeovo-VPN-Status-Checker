@@ -4,6 +4,10 @@ import re
 import requests
 from bs4 import BeautifulSoup
 from tabulate import tabulate
+from colorama import Fore, Style, init
+
+# Enable ANSI colors on Windows too
+init(autoreset=False)
 
 # Xeovo VPN server info
 xeovo_vpn_info = {
@@ -49,6 +53,52 @@ SERVER_CODE_RE = re.compile(r"^[A-Z]{2}(?:-[A-Z]{2})?-\d+$")  # e.g. AL-2, US-LV
 PERCENT_RE = re.compile(r"^\d{1,3}%$")
 
 
+# ----------------------------
+# Helpers: coloring
+# ----------------------------
+def color_latency(latency: float) -> str:
+    """
+    Latency coloring:
+      < 80 ms   -> green
+      80-150 ms -> yellow
+      > 150 ms  -> red
+      inf/timeout -> red
+    """
+    if latency == float("inf"):
+        return Fore.RED + "timeout" + Style.RESET_ALL
+
+    if latency < 80:
+        return Fore.GREEN + f"{latency:.1f} ms" + Style.RESET_ALL
+    elif latency < 150:
+        return Fore.YELLOW + f"{latency:.1f} ms" + Style.RESET_ALL
+    else:
+        return Fore.RED + f"{latency:.1f} ms" + Style.RESET_ALL
+
+
+def color_load(load: str) -> str:
+    """
+    Load coloring:
+      0-30%  -> green
+      31-60% -> yellow
+      >60%   -> red
+      N/A/DOWN/invalid -> red
+    """
+    try:
+        val = int(load.strip().replace("%", ""))
+        if val <= 30:
+            return Fore.GREEN + f"{val}%" + Style.RESET_ALL
+        elif val <= 60:
+            return Fore.YELLOW + f"{val}%" + Style.RESET_ALL
+        else:
+            return Fore.RED + f"{val}%" + Style.RESET_ALL
+    except Exception:
+        # Anything not parseable
+        return Fore.RED + str(load) + Style.RESET_ALL
+
+
+# ----------------------------
+# Helpers: status scraping
+# ----------------------------
 def _normalize_lines_from_html(html: str) -> list[str]:
     soup = BeautifulSoup(html, "html.parser")
     text = soup.get_text("\n", strip=True)
@@ -109,7 +159,7 @@ def fetch_server_load_data() -> dict[str, str]:
         if not vpn_lines:
             return {}
 
-        data = {}
+        data: dict[str, str] = {}
         i = 0
         while i < len(vpn_lines):
             ln = vpn_lines[i]
@@ -117,7 +167,7 @@ def fetch_server_load_data() -> dict[str, str]:
             if _looks_like_location(ln):
                 location = ln
 
-                # Find FIRST percentage after location (skip Operational/P2P/etc.)
+                # Find first percentage after location (skip other words)
                 j = i + 1
                 found = None
                 while j < len(vpn_lines):
@@ -138,6 +188,7 @@ def fetch_server_load_data() -> dict[str, str]:
             i += 1
 
         return data
+
     except requests.RequestException:
         return {}
 
@@ -156,6 +207,9 @@ def get_server_load(country: str, city: str, server_load_data: dict[str, str]) -
     return server_load_data.get(key, "N/A")
 
 
+# ----------------------------
+# Helpers: ping
+# ----------------------------
 def ping(host: str) -> float:
     """
     Robust ping parser:
@@ -182,23 +236,22 @@ def ping(host: str) -> float:
         )
         out = (result.stdout or "") + "\n" + (result.stderr or "")
 
-        # Windows: Reply time=XXms or time<1ms
+        # Windows: Reply time=XXms or time<1ms (time=1ms, time<1ms)
         if system == "windows":
             m = re.search(r"time[=<]\s*(\d+)\s*ms", out, re.IGNORECASE)
             if m:
                 val = float(m.group(1))
                 if val <= 0:
-                    # time<1ms sometimes appears as 0 in summaries; represent as 0.5ms
                     return 0.5
                 return val
 
-            # Windows fallback: Average = XXms (no space before ms sometimes)
+            # Windows fallback: Average = XXms
             m = re.search(r"Average\s*=\s*(\d+)\s*ms", out, re.IGNORECASE)
             if m:
                 val = float(m.group(1))
                 return val if val > 0 else float("inf")
 
-        # Unix: time=XX ms
+        # Unix: time=XX ms or time<1 ms
         m = re.search(r"time[=<]\s*(\d+(?:\.\d+)?)\s*ms", out, re.IGNORECASE)
         if m:
             val = float(m.group(1))
@@ -223,12 +276,15 @@ def main():
     for _, (host, country, city) in xeovo_vpn_info.items():
         latency = ping(host)
         load = get_server_load(country, city, server_load_data)
-        latency_str = "timeout" if latency == float("inf") else f"{latency:.1f} ms"
-        results.append((country, city, host, latency_str, load))
+
+        # Colorized values
+        latency_col = color_latency(latency)
+        load_col = color_load(load)
+
+        results.append((country, city, host, latency_col, load_col))
 
     headers = ["Country", "City", "Host", "Latency", "Load"]
 
-    # Prevent console wrapping by limiting wide columns (tabulate will wrap within the cell)
     print("\nXeovo VPN Server Latency and Load List:\n")
     print(tabulate(
         results,
@@ -243,3 +299,6 @@ if __name__ == "__main__":
     main()
     print()
     input("Press Enter to continue... ")
+
+# Build example:
+# pyinstaller --icon=icon.ico --distpath ./ --workpath ./build --clean -F --noconsole -n "Xeovo VPN Status" --add-data "icon.ico;." --upx-dir=upx main.py
