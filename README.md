@@ -250,5 +250,3 @@ Released under the [MIT License](LICENSE).
 
 * Built with Python, `requests`, `beautifulsoup4`, `colorama`, and `tabulate`
 * Status data sourced from <a href="https://status.xeovo.com/">Xeovo Status Page</a>
-
-```
