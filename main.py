@@ -3,19 +3,16 @@ import platform
 import re
 import requests
 from bs4 import BeautifulSoup
-from colorama import init, Fore, Style
 from tabulate import tabulate
-
-# Initialize colorama for cross-platform colored output
-init()
 
 # Xeovo VPN server info
 xeovo_vpn_info = {
-    "al":      ("au.gw.xeovo.com", "Albania", "Tirana"),
+    "al":      ("al.gw.xeovo.com", "Albania", "Tirana"),
     "au":      ("au.gw.xeovo.com", "Australia", "Sydney"),
+    "br":      ("br.gw.xeovo.com", "Brazil", "São Paulo"),
     "ca":      ("ca.gw.xeovo.com", "Canada", "Montreal"),
     "ch":      ("ch.gw.xeovo.com", "Switzerland", "Zurich"),
-    "de":      ("ch.gw.xeovo.com", "Germany", "Falkenstein"),
+    "de":      ("de.gw.xeovo.com", "Germany", "Nuremberg"),
     "fi":      ("fi.gw.xeovo.com", "Finland", "Helsinki"),
     "fr":      ("fr.gw.xeovo.com", "France", "Paris"),
     "jp":      ("jp.gw.xeovo.com", "Japan", "Tokyo"),
@@ -24,149 +21,225 @@ xeovo_vpn_info = {
     "nl":      ("nl.gw.xeovo.com", "Netherlands", "Amsterdam"),
     "no":      ("no.gw.xeovo.com", "Norway", "Sandefjord"),
     "pl":      ("pl.gw.xeovo.com", "Poland", "Warsaw"),
-    "ro":      ("ro.gw.xeovo.com", "Romania", "Iasi"),
+    "ro":      ("ro.gw.xeovo.com", "Romania", "Bucharest"),
     "se":      ("se.gw.xeovo.com", "Sweden", "Stockholm"),
     "sg":      ("sg.gw.xeovo.com", "Singapore", "Singapore"),
     "ua":      ("ua.gw.xeovo.com", "Ukraine", "Kyiv"),
     "uk":      ("uk.gw.xeovo.com", "United Kingdom", "London"),
     "us-lv":   ("us-lv.gw.xeovo.com", "United States", "Las Vegas"),
     "us-mia":  ("us-mia.gw.xeovo.com", "United States", "Miami"),
-    "us-nyc":  ("us-nyc.gw.xeovo.com", "United States", "New York")
+    "us-nyc":  ("us-nyc.gw.xeovo.com", "United States", "New York"),
 }
 
-# Function to fetch server load dynamically
-def fetch_server_load_data():
+STATUS_URL = "https://status.xeovo.com/"
+
+IGNORED_LINES = {
+    "VPN Servers",
+    "Stealth Proxy Servers",
+    "Service",
+    "Service Availability",
+    "Past Incidents",
+    "WireGuard, AmneziaWG and OpenVPN protocols.",
+    "Shadowsocks, VMess, VLESS and Trojan protocols.",
+    "P2P",
+    "CN",
+}
+
+SERVER_CODE_RE = re.compile(r"^[A-Z]{2}(?:-[A-Z]{2})?-\d+$")  # e.g. AL-2, US-LV-3, UK-1
+PERCENT_RE = re.compile(r"^\d{1,3}%$")
+
+
+def _normalize_lines_from_html(html: str) -> list[str]:
+    soup = BeautifulSoup(html, "html.parser")
+    text = soup.get_text("\n", strip=True)
+    return [ln.strip() for ln in text.splitlines() if ln.strip()]
+
+
+def _find_section(lines: list[str], start_title: str, end_title: str) -> list[str]:
+    def find_idx(title: str):
+        t = title.strip().lower()
+        for i, ln in enumerate(lines):
+            if ln.strip().lower() == t:
+                return i
+        return None
+
+    s = find_idx(start_title)
+    e = find_idx(end_title)
+    if s is None or e is None or e <= s:
+        return []
+    return lines[s + 1 : e]
+
+
+def _looks_like_location(line: str) -> bool:
+    if line in IGNORED_LINES:
+        return False
+    if "●" in line:
+        return False
+    if SERVER_CODE_RE.match(line):
+        return False
+    if PERCENT_RE.match(line):
+        return False
+    if "," in line:
+        return True
+    if line == "Singapore":
+        return True
+    return False
+
+
+def fetch_server_load_data() -> dict[str, str]:
+    """
+    Returns mapping like:
+      "Finland, Helsinki" -> "72%"
+      "USA, Las Vegas"    -> "8%"
+      "Singapore"         -> "0%"
+    """
     try:
         headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36"
+            "User-Agent": (
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                "AppleWebKit/537.36 (KHTML, like Gecko) "
+                "Chrome/129.0.0.0 Safari/537.36"
+            )
         }
-        response = requests.get("https://status.xeovo.com/", timeout=10, headers=headers)
-        response.raise_for_status()
-        soup = BeautifulSoup(response.text, "html.parser")
-        
-        # Find the VPN Servers section
-        vpn_section = None
-        for header in soup.find_all(["h2", "h3", "h4"], string=re.compile("VPN Servers", re.I)):
-            vpn_section = header
-            break
-        
-        if not vpn_section:
+        r = requests.get(STATUS_URL, timeout=15, headers=headers)
+        r.raise_for_status()
+
+        lines = _normalize_lines_from_html(r.text)
+        vpn_lines = _find_section(lines, "VPN Servers", "Stealth Proxy Servers")
+        if not vpn_lines:
             return {}
-        
-        # Find the table container
-        server_data = {}
-        table = soup.find("table", class_="vpngw")
-        if not table:
-            return {}
-        
-        # Parse table rows
-        for row in table.find_all("tr"):
-            cells = row.find_all("td")
-            if len(cells) >= 2:
-                location = cells[0].get_text(strip=True)
-                status_span = cells[1].find("span", class_="text")
-                if status_span:
-                    load = status_span.get_text(strip=True)
-                    if location and load:
-                        server_data[location] = load
-        
-        return server_data
-    except (requests.RequestException, AttributeError):
+
+        data = {}
+        i = 0
+        while i < len(vpn_lines):
+            ln = vpn_lines[i]
+
+            if _looks_like_location(ln):
+                location = ln
+
+                # Find FIRST percentage after location (skip Operational/P2P/etc.)
+                j = i + 1
+                found = None
+                while j < len(vpn_lines):
+                    nxt = vpn_lines[j]
+                    if _looks_like_location(nxt):
+                        break
+                    if PERCENT_RE.match(nxt):
+                        found = nxt
+                        break
+                    j += 1
+
+                if found:
+                    data[location] = found
+
+                i = j
+                continue
+
+            i += 1
+
+        return data
+    except requests.RequestException:
         return {}
 
-# Function to get server load
-def get_server_load(country, city, server_load_data):
-    # Handle special cases for United States, United Kingdom, and Singapore servers
+
+def get_server_load(country: str, city: str, server_load_data: dict[str, str]) -> str:
+    # Xeovo labels: "USA, ..." and "UK, ..." on the status page
     if country == "United States":
         key = f"USA, {city}"
     elif country == "United Kingdom":
         key = f"UK, {city}"
     elif city == "Singapore":
-        key = country
+        key = "Singapore"
     else:
         key = f"{country}, {city}"
-    
-    load = server_load_data.get(key, "N/A")
-    # Extract percentage if load is a percentage string, else return as is
-    if load.endswith("% load"):
-        return load.replace(" load", "")
-    return load
 
-# Function to color latency
-def color_latency(latency):
-    if latency == float("inf"):
-        return Fore.RED + "timeout" + Style.RESET_ALL
-    latency_ms = f"{latency:.1f} ms"
-    if latency < 50:
-        return Fore.GREEN + latency_ms + Style.RESET_ALL
-    elif latency < 100:
-        return Fore.YELLOW + latency_ms + Style.RESET_ALL
-    else:
-        return Fore.RED + latency_ms + Style.RESET_ALL
+    return server_load_data.get(key, "N/A")
 
-# Function to color load
-def color_load(load):
-    if load == "N/A":
-        return load
-    if load == "DOWN":
-        return Fore.RED + "DOWN" + Style.RESET_ALL
-    try:
-        load_value = int(load.replace("%", ""))
-        if load_value < 30:
-            return Fore.GREEN + load + Style.RESET_ALL
-        elif load_value < 60:
-            return Fore.YELLOW + load + Style.RESET_ALL
-        else:
-            return Fore.RED + load + Style.RESET_ALL
-    except ValueError:
-        return load
 
-# Ping function
-def ping(host):
+def ping(host: str) -> float:
+    """
+    Robust ping parser:
+      - Windows: parse reply line time=XXms or time<1ms first
+      - Unix: parse time=XX ms
+      - Fallback: parse avg from summary
+      - Treat 0.0 as invalid (except <1ms => 0.5ms)
+    """
     system = platform.system().lower()
-    param = "-n" if system == "windows" else "-c"
+
+    if system == "windows":
+        cmd = ["ping", "-n", "1", "-w", "2500", host]
+    else:
+        # Linux/macOS
+        cmd = ["ping", "-c", "1", "-W", "2", host] if system == "linux" else ["ping", "-c", "1", host]
+
     try:
         result = subprocess.run(
-            ["ping", param, "1", host],
+            cmd,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True,
-            timeout=3
+            timeout=4
         )
-        output = result.stdout
+        out = (result.stdout or "") + "\n" + (result.stderr or "")
+
+        # Windows: Reply time=XXms or time<1ms
         if system == "windows":
-            match = re.search(r"(\d+)", output.split(" = ")[-1])
-        else:
-            match = re.search(r"time=(\d+\.?\d*) ms", output)
-        if match:
-            return float(match.group(1))
+            m = re.search(r"time[=<]\s*(\d+)\s*ms", out, re.IGNORECASE)
+            if m:
+                val = float(m.group(1))
+                if val <= 0:
+                    # time<1ms sometimes appears as 0 in summaries; represent as 0.5ms
+                    return 0.5
+                return val
+
+            # Windows fallback: Average = XXms (no space before ms sometimes)
+            m = re.search(r"Average\s*=\s*(\d+)\s*ms", out, re.IGNORECASE)
+            if m:
+                val = float(m.group(1))
+                return val if val > 0 else float("inf")
+
+        # Unix: time=XX ms
+        m = re.search(r"time[=<]\s*(\d+(?:\.\d+)?)\s*ms", out, re.IGNORECASE)
+        if m:
+            val = float(m.group(1))
+            return val if val > 0 else float("inf")
+
+        # Unix fallback: rtt min/avg/max/... = a/b/c/d
+        m = re.search(r"=\s*\d+(?:\.\d+)?/(\d+(?:\.\d+)?)/", out)
+        if m:
+            val = float(m.group(1))
+            return val if val > 0 else float("inf")
+
     except subprocess.TimeoutExpired:
         return float("inf")
+
     return float("inf")
 
-# Main function to run the script
+
 def main():
-    # Fetch server load data once
     server_load_data = fetch_server_load_data()
 
-    # Ping all servers and collect results
     results = []
-    for code, (host, country, city) in xeovo_vpn_info.items():
+    for _, (host, country, city) in xeovo_vpn_info.items():
         latency = ping(host)
         load = get_server_load(country, city, server_load_data)
-        results.append((latency, country, city, host, load))
+        latency_str = "timeout" if latency == float("inf") else f"{latency:.1f} ms"
+        results.append((country, city, host, latency_str, load))
 
-    # Prepare table data
-    table_data = []
-    for idx, (latency, country, city, host, load) in enumerate(results, 1):
-        colored_status = color_latency(latency)
-        colored_load = color_load(load)
-        table_data.append([idx, country, city, host, colored_status, colored_load])
+    headers = ["Country", "City", "Host", "Latency", "Load"]
 
-    # Print results using tabulate
-    headers = ["#", "Country", "City", "Host", "Latency", "Load"]
+    # Prevent console wrapping by limiting wide columns (tabulate will wrap within the cell)
     print("\nXeovo VPN Server Latency and Load List:\n")
-    print(tabulate(table_data, headers=headers, tablefmt="fancy_grid"))
+    print(tabulate(
+        results,
+        headers=headers,
+        tablefmt="grid",
+        disable_numparse=True,
+        maxcolwidths=[18, 14, 26, 12, 6]
+    ))
+
 
 if __name__ == "__main__":
     main()
+    print()
+    input("Press Enter to continue... ")
